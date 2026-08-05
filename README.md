@@ -4,6 +4,19 @@ A small, dependency-light CPU benchmark for compact telemetry classifiers and in
 post-training quantization. It is meant to be boring in the best way: synthetic
 data, inspectable models, no network calls, and markdown output you can commit.
 
+## Research + Money Thesis
+
+**Research question:** what accuracy, latency, memory, and model-size trade-offs appear
+when telemetry models are quantized for embedded-style deployment?
+
+**Money question:** efficient inference compounds across fleets. Smaller local telemetry
+models can reduce memory footprint, CPU load, power draw, and upstream data movement while
+enabling local fault detection near the hardware.
+
+**Engineering evidence:** the benchmark reports fp32 versus int8 accuracy, latency,
+throughput, classifier bytes, total model bytes, and compression, with deterministic data
+and reproducible markdown output.
+
 ## Why this exists
 
 TinyML telemetry classifiers often ship under tight memory and latency budgets. A
