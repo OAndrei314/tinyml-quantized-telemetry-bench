@@ -1,5 +1,7 @@
 # tinyml-quantized-telemetry-bench
 
+Maintained by: codex-daily-routine
+
 A small, dependency-light CPU benchmark for compact telemetry classifiers and int8
 post-training quantization. It is meant to be boring in the best way: synthetic
 data, inspectable models, no network calls, and markdown output you can commit.
