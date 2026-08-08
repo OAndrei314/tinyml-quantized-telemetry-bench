@@ -30,7 +30,9 @@ def test_cli_run_writes_metrics_and_report(tmp_path):
     model_names = {row["name"] for row in summary["models"]}
     assert model_names == {"fp32", "int8-ptq"}
     assert summary["dataset"]["feature_count"] == 32
+    assert summary["deployment"]["recommended_model"] in model_names
     assert "TinyML Telemetry Benchmark Report" in report_path.read_text(encoding="utf-8")
+    assert "Deployment Readiness" in report_path.read_text(encoding="utf-8")
 
 
 def test_cli_report_rebuilds_markdown(tmp_path):

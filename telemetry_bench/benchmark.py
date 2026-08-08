@@ -23,6 +23,14 @@ class BenchmarkConfig:
     l2: float = 1.0e-2
 
 
+@dataclass(frozen=True)
+class DeploymentTarget:
+    min_accuracy: float = 0.94
+    max_sample_latency_us: float = 50.0
+    max_model_bytes: int = 16_384
+    min_compression_vs_fp32: float = 1.0
+
+
 def _evaluate_model(name: str, model: object, test_dataset: object, repeats: int) -> dict[str, Any]:
     predictions = model.predict(test_dataset.features)
     latency = measure_predict_latency(model, test_dataset.features, repeats=repeats)
@@ -63,7 +71,7 @@ def run_benchmark(config: BenchmarkConfig | None = None) -> dict[str, Any]:
     for row in models:
         row["compression_vs_fp32"] = fp32_bytes / row["total_model_bytes"]
 
-    return {
+    summary = {
         "benchmark": "tinyml-quantized-telemetry-bench",
         "config": asdict(config),
         "dataset": {
@@ -76,6 +84,45 @@ def run_benchmark(config: BenchmarkConfig | None = None) -> dict[str, Any]:
         },
         "models": models,
     }
+    summary["deployment"] = score_deployment_readiness(summary)
+    return summary
+
+
+def score_deployment_readiness(summary: dict[str, Any], target: DeploymentTarget | None = None) -> dict[str, Any]:
+    """Score benchmark rows against an embedded deployment target."""
+    target = target or DeploymentTarget()
+    scored = []
+    for row in summary.get("models", []):
+        latency = row["latency"]
+        violations: list[str] = []
+        score = 0.0
+        if row["accuracy"] >= target.min_accuracy:
+            score += 0.35
+        else:
+            violations.append("accuracy_below_target")
+        if latency["sample_latency_us"] <= target.max_sample_latency_us:
+            score += 0.25
+        else:
+            violations.append("latency_above_target")
+        if row["total_model_bytes"] <= target.max_model_bytes:
+            score += 0.25
+        else:
+            violations.append("model_too_large")
+        if row["compression_vs_fp32"] >= target.min_compression_vs_fp32:
+            score += 0.15
+        else:
+            violations.append("compression_below_target")
+        scored.append(
+            {
+                "model": row["name"],
+                "readiness_score": round(score, 3),
+                "passed": not violations,
+                "violations": violations,
+            }
+        )
+    scored.sort(key=lambda item: (-item["readiness_score"], str(item["model"])))
+    recommended = next((row["model"] for row in scored if row["passed"]), scored[0]["model"] if scored else "")
+    return {"target": asdict(target), "recommended_model": recommended, "models": scored}
 
 
 def write_metrics(summary: dict[str, Any], out_dir: str | Path) -> Path:

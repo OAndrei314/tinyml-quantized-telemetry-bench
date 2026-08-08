@@ -17,7 +17,8 @@ enabling local fault detection near the hardware.
 
 **Engineering evidence:** the benchmark reports fp32 versus int8 accuracy, latency,
 throughput, classifier bytes, total model bytes, and compression, with deterministic data
-and reproducible markdown output.
+and reproducible markdown output. It also scores each model against an explicit embedded
+deployment target via `score_deployment_readiness()`.
 
 ## Why this exists
 
@@ -82,7 +83,8 @@ python -m telemetry_bench.cli report --metrics results/demo/metrics.json --out r
 ## Status
 
 MVP: deterministic synthetic data, fp32 classifier, int8 post-training quantized
-classifier, benchmark runner, CLI, markdown report, and network-free tests.
+classifier, deployment readiness scoring, benchmark runner, CLI, markdown report, and
+network-free tests.
 
 ## License
 

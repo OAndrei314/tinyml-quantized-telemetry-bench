@@ -61,6 +61,26 @@ def build_report(summary: Mapping[str, Any]) -> str:
             + " |"
         )
 
+    deployment = summary.get("deployment", {})
+    if deployment:
+        lines.extend(
+            [
+                "",
+                "## Deployment Readiness",
+                "",
+                f"- Recommended model: `{deployment.get('recommended_model')}`",
+                "",
+                "| model | readiness_score | passed | violations |",
+                "| --- | ---: | :---: | --- |",
+            ]
+        )
+        for row in deployment.get("models", []):
+            violations = ", ".join(row.get("violations", [])) or "none"
+            lines.append(
+                f"| {row.get('model')} | {_fmt_float(row.get('readiness_score', 0), 3)} | "
+                f"{'yes' if row.get('passed') else 'no'} | {violations} |"
+            )
+
     lines.extend(
         [
             "",
